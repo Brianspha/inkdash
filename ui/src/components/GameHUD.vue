@@ -2,7 +2,7 @@
     <div class="game-hud">
         <div v-if="store.gameActive" class="game-header">
             <h1>Ink-Dash</h1>
-            <div class="sub-heading">DASH to the next chain!</div>
+            <div class="sub-heading">DASH to the END!</div>
         </div>
 
         <div v-if="store.gameActive" class="stats-bar">
@@ -32,7 +32,7 @@
                 <p class="level-value">Your Score: {{ store.score }}</p>
                 <p class="level-value">Your Distance: {{ store.distance }}</p>
                 <button @click="restart">Restart</button>
-                <button @click="continueNextChain">Continue to next chain</button>
+                <button @click="continueGame">Continue</button>
             </div>
         </div>
         <!-- Start Menu -->
@@ -47,7 +47,7 @@
 
 <script setup lang="ts">
 import { useGameStore } from '@/stores/gamestore'
-import { onMounted, inject } from 'vue'
+import { onMounted, inject, ref } from 'vue'
 import Onboard from '@subwallet-connect/core';
 import injectedModule from '@subwallet-connect/injected-wallets';
 import subwalletModule from '@subwallet-connect/subwallet';
@@ -85,12 +85,11 @@ const onboard = Onboard({
         }
     ]
 })
-const provider = new WsProvider('ws://127.0.0.1:62160');
+const provider = ref<WsProvider | null>(null)
 
 // Create the API and wait until ready
-const api = await ApiPromise.create({ provider });
-const contract = new ContractPromise(api, require("../../../contracts/"), address);
-
+const api = ref<ApiPromise | null>(null)
+//const contract = new ContractPromise(api, require("../../../contracts/"), "");
 
 const submitScore = () => {
     console.log("submitting score", store.score)
@@ -99,7 +98,7 @@ const play = () => {
     store.showMenu = false
     connectWallet()
 }
-const continueNextChain = () => {
+const continueGame = () => {
     console.log("continue")
 }
 const restart = () => {
@@ -108,13 +107,15 @@ const restart = () => {
 }
 const connectWallet = async () => {
     // Initialise the provider to connect to the local node
- 
+
     progress.start();
+    provider.value = new WsProvider('ws://127.0.0.1:62160');
+    api.value = await ApiPromise.create({ provider: provider.value });
     // Retrieve the chain & node information via rpc calls
     const [chain, nodeName, nodeVersion] = await Promise.all([
-        api.rpc.system.chain(),
-        api.rpc.system.name(),
-        api.rpc.system.version()
+        api.value.rpc.system.chain(),
+        api.value.rpc.system.name(),
+        api.value.rpc.system.version()
     ]);
 
     console.log(`You are connected to chain ${chain} using ${nodeName} v${nodeVersion}`);
@@ -125,6 +126,7 @@ const connectWallet = async () => {
         console.log("connected to polkadot")
         store.address = wallet.accounts[0].address
     }
+    store.canDash = true
     progress.finish();
 }
 const updateAddress = (): string => {
@@ -132,6 +134,8 @@ const updateAddress = (): string => {
 }
 onMounted(() => {
     console.log("mounted: ", store.showMenu)
+    store.gameActive = false
+    store.canDash = false
 })
 </script>
 <style scoped>

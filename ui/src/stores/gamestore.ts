@@ -9,5 +9,7 @@ export const useGameStore = defineStore('game', () => {
   const score = ref(0)
   const distance = ref(0)
   const restart = ref(false)
-  return { restart, address, isLoading, showMenu, gameActive, score, distance }
+  const canMove = ref(false)
+  const canDash = ref(false)
+  return { restart, address, isLoading, showMenu, gameActive, score, distance, canMove, canDash }
 })

@@ -78,12 +78,10 @@ const planes = ref([] as Plane[])
 const currentPlaneIndex = ref(0)
 const totalInitialPlanes = 49
 const player = shallowRef()
-const canMove = ref(false)
 const playerPosition = ref([0, 0.5, 2])
 const playerRotation = ref([0, Math.PI, 0])
 const isMoving = ref(false)
 const isDashing = ref(false)
-const canDash = ref(true)
 const moveStartTime = ref(0)
 const movementDuration = 200
 const dashDuration = 100
@@ -290,7 +288,7 @@ const endGame = () => {
 }
 
 const moveToNextPlane = () => {
-  if (!canMove.value || isMoving.value || !store.gameActive || store.showMenu) return
+  if (!store.canMove || isMoving.value || !store.gameActive || store.showMenu) return
 
   isMoving.value = true
   moveStartTime.value = performance.now()
@@ -333,17 +331,17 @@ const moveToNextPlane = () => {
 
 const handleMouseDown = (event: { button: number }) => {
   if (event.button === 0) {
-    canMove.value = true
-    if (canDash.value) {
+    store.canMove = true
+    if (store.canDash) {
       isDashing.value = true
-      canDash.value = false
+      moveToNextPlane()
     }
-    moveToNextPlane()
+
   }
 }
 const handleMouseUp = (event: { button: number }) => {
   if (event.button === 0) {
-    canMove.value = false
+    store.canMove = false
   }
 }
 
@@ -460,7 +458,7 @@ const shouldMakeVisible = () => {
 }
 
 const restartGame = () => {
-  store.restart=false;
+  store.restart = false;
   currentPlaneIndex.value = 0
   store.gameActive = true
   currentLevel.value = 1
@@ -468,7 +466,6 @@ const restartGame = () => {
   store.distance = 0
   isMoving.value = false
   isDashing.value = false
-  canDash.value = true
   startTime.value = performance.now()
   energy.value = 100
   store.score = 0
